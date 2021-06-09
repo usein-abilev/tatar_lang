@@ -11,17 +11,23 @@ static ssize_t read_line(char** line, size_t* length, FILE* file) {
     }
 
     if (!*line) {
-        *line = malloc(INITIAL_ALLOC);
+        *line = calloc(1, INITIAL_ALLOC);
         *length = INITIAL_ALLOC;
     }
 
     int current_char;
     while ((current_char = getc(file)) != EOF) {
-        if (current_char == '\r') continue;
         read_number++;
+
         if (read_number > *length) {
-            size_t realloc_size = *length + ALLOC_STEP;
-            char* temp = realloc(*line, realloc_size + 1);
+            int realloc_size = *length + ALLOC_STEP;
+            char* temp = (char*)realloc(*line, realloc_size + 1);
+
+            if (temp == NULL) {
+                errno = ENOMEM;
+                return -1;
+            }
+
             *line = temp;
             *length = realloc_size;
         }
@@ -31,10 +37,14 @@ static ssize_t read_line(char** line, size_t* length, FILE* file) {
             return -1;
         }
 
-
         (*line)[read_number - 1] = (char)current_char;
 
         if (current_char == '\n') break;
+    }
+
+    if (current_char == EOF) {
+        errno = 0;
+        return -1;
     }
 
     (*line)[read_number] = '\0';
@@ -49,14 +59,42 @@ char* read_file(const char* filename) {
         exit(1);
     }
 
+    int buffer_size = 2;
+    char* buffer = calloc(1, buffer_size * sizeof(*buffer));
+
     char* line = NULL;
-    char* buffer = calloc(1, sizeof(char));
-    buffer[0] = '\0';
-    size_t length = 0;
-    
-    while(read_line(&buffer, &length, file))
-    
+
+    size_t allocated_line_size = 0;
+    ssize_t current_line_size = 0;
+
+    size_t total_size = 0;
+
+    while (1) {
+        current_line_size = read_line(&line, &allocated_line_size, file);
+        if (current_line_size != EOF) total_size += current_line_size;
+
+        if (total_size > buffer_size) {
+            buffer_size += total_size;
+            char* temp = (char*)realloc(buffer, buffer_size + 1);
+
+            if (temp == NULL) {
+                errno = ENOMEM;
+                exit(1);
+            }
+
+            buffer = temp;
+        }
+
+        strncat(buffer, line, current_line_size);
+
+        if (current_line_size == EOF) break;
+    }
+
     fclose(file);
+
+    if (line) {
+        free(line);
+    }
 
     return buffer;
 }
