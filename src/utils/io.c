@@ -59,7 +59,7 @@ char* read_file(const char* filename) {
         exit(1);
     }
 
-    int buffer_size = 2;
+    int buffer_size = 16;
     char* buffer = calloc(1, buffer_size * sizeof(*buffer));
 
     char* line = NULL;
@@ -75,7 +75,7 @@ char* read_file(const char* filename) {
 
         if (total_size > buffer_size) {
             buffer_size += total_size;
-            char* temp = (char*)realloc(buffer, buffer_size + 1);
+            char* temp = realloc(buffer, buffer_size + 1);
 
             if (temp == NULL) {
                 errno = ENOMEM;
@@ -84,8 +84,9 @@ char* read_file(const char* filename) {
 
             buffer = temp;
         }
-
-        strncat(buffer, line, current_line_size);
+        if (line != NULL) {
+            strncat(buffer, line, current_line_size);
+        }
 
         if (current_line_size == EOF) break;
     }
@@ -95,6 +96,11 @@ char* read_file(const char* filename) {
     if (line) {
         free(line);
     }
-    
+
     return buffer;
+}
+
+void tatar_panic(const char* const data) {
+    printf("[panic]: %s\n", data);
+    exit(1);
 }

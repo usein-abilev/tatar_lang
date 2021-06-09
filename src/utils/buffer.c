@@ -16,7 +16,7 @@ static void buffer_realloc(buffer_t* buffer, int new_size) {
         return buffer_panic(buffer, "Uninitialized string of buffer.", EINVAL);
     }
 
-    char* result = realloc(buffer->string, new_size);
+    char* result = (char*)realloc(buffer->string, new_size);
     if (result == NULL) {
         return buffer_panic(buffer, "Memory re-allocation error.", ENOMEM);
     }
@@ -26,7 +26,7 @@ static void buffer_realloc(buffer_t* buffer, int new_size) {
 }
 
 static bool buffer_reached(buffer_t* buffer, int append_size) {
-    return buffer->length + append_size + 1 > buffer->allocated_size;
+    return buffer->length + append_size + 1 >= buffer->allocated_size;
 }
 
 buffer_t* buffer_init() {
@@ -48,7 +48,6 @@ void buffer_add(buffer_t* buffer, const char s) {
     }
 
     buffer->string[buffer->length++] = s;
-    buffer->string[buffer->length] = '\0';
 }
 
 void buffer_append(buffer_t* buffer, const char* data) {
@@ -64,6 +63,14 @@ void buffer_append(buffer_t* buffer, const char* data) {
 
     strncat(buffer->string, data, data_length);
     buffer->length += data_length;
+}
+
+void buffer_clear(buffer_t* buffer) {
+    for (int i = 0; i < buffer->allocated_size; i++) {
+        buffer->string[i] = '\0';
+    }
+
+    buffer->length = 0;
 }
 
 void buffer_destroy(buffer_t* buffer) {
