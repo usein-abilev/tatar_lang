@@ -95,6 +95,6 @@ char* read_file(const char* filename) {
     if (line) {
         free(line);
     }
-
+    
     return buffer;
 }
