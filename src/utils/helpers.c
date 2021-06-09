@@ -13,5 +13,9 @@ bool is_eof(char c) {
 }
 
 bool is_identifier_start(char c) {
-    return c == '$' || c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+    return c == '$' || c == '_' || isalpha(c);
+}
+
+bool is_identifier_part(char c) {
+    return is_identifier_start(c) || isdigit(c);
 }
