@@ -4,11 +4,10 @@ int main() {
     char* source = read_file("./lang_sources/common.allah");
     printf("Compiling:\n\n%s\n\n", source);
 
-    // printf("Stored data: %s\n\n", buffer->string);
-
-    // lexer_t* lexer = lexer_init(source);
-    // token_t* token = lexer_next_token(lexer);
-    // printf("token: (%i, %s)\n", token->kind, token->value);
+    lexer_t* lexer = lexer_init(source);    
+    parser_t* parser = parser_init(lexer);
+    
+    lexer_destroy(lexer);
     free(source);
 
     return 0;
