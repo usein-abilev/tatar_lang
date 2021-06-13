@@ -22,7 +22,7 @@ static void lexer_advance(lexer_t* lexer) {
 static token_t* lexer_consume_single(lexer_t* lexer, int kind) {
     char c = lexer->current_char;
     lexer_advance(lexer);
-    return token_init(c, kind);
+    return token_init((char[2]) { c, 0 }, kind);
 }
 
 static char* lexer_parse_number(lexer_t* lexer) {
@@ -87,7 +87,17 @@ token_t* lexer_next_token(lexer_t* lexer) {
             lexer_parse_identifier(lexer);
             lexer_advance(lexer);
 
-            return lexer->current_token = token_init(lexer->current_buffer->string, TOKEN_SYMBOL);
+            int kind;
+            char* id = lexer->current_buffer->string;
+
+            if (strcmp(id, "let") == 0) kind = TOKEN_LET;
+            else if (strcmp(id, "const") == 0) kind = TOKEN_CONST;
+            else if (strcmp(id, "fun") == 0) kind = TOKEN_FUN;
+            else if (strcmp(id, "for") == 0) kind = TOKEN_FOR;
+            else if (strcmp(id, "while") == 0) kind = TOKEN_WHILE;
+            else if (strcmp(id, "return") == 0) kind = TOKEN_RETURN;
+            else kind = TOKEN_SYMBOL;
+            return lexer->current_token = token_init(id, kind);
         }
 
         if (isdigit(lexer->current_char)) {
@@ -98,20 +108,20 @@ token_t* lexer_next_token(lexer_t* lexer) {
         }
 
         switch (lexer->current_char) {
-        case '+': return lexer_consume_single(lexer, TOKEN_PLUS);
-        case '-': return lexer_consume_single(lexer, TOKEN_MINUS);
-        case '/': return lexer_consume_single(lexer, TOKEN_SLASH);
-        case '*': return lexer_consume_single(lexer, TOKEN_STAR);
-        case ';': return lexer_consume_single(lexer, TOKEN_SEMICOLON);
-        case '=': return lexer_consume_single(lexer, TOKEN_EQUAL);
-        case '(': return lexer_consume_single(lexer, TOKEN_LEFT_PARENT);
-        case ')': return lexer_consume_single(lexer, TOKEN_RIGHT_PARENT);
-        case '[': return lexer_consume_single(lexer, TOKEN_RIGHT_BRACKET);
-        case ']': return lexer_consume_single(lexer, TOKEN_LEFT_BRACKET);
-        case '>': return lexer_consume_single(lexer, TOKEN_GT);
-        case '<': return lexer_consume_single(lexer, TOKEN_LT);
-        case '{': return lexer_consume_single(lexer, TOKEN_RIGHT_BRACE);
-        case '}': return lexer_consume_single(lexer, TOKEN_LEFT_BRACE);
+            case '+': return lexer_consume_single(lexer, TOKEN_PLUS);
+            case '-': return lexer_consume_single(lexer, TOKEN_MINUS);
+            case '/': return lexer_consume_single(lexer, TOKEN_SLASH);
+            case '*': return lexer_consume_single(lexer, TOKEN_STAR);
+            case ';': return lexer_consume_single(lexer, TOKEN_SEMICOLON);
+            case '=': return lexer_consume_single(lexer, TOKEN_EQUAL);
+            case '(': return lexer_consume_single(lexer, TOKEN_LEFT_PARENT);
+            case ')': return lexer_consume_single(lexer, TOKEN_RIGHT_PARENT);
+            case '[': return lexer_consume_single(lexer, TOKEN_RIGHT_BRACKET);
+            case ']': return lexer_consume_single(lexer, TOKEN_LEFT_BRACKET);
+            case '>': return lexer_consume_single(lexer, TOKEN_GT);
+            case '<': return lexer_consume_single(lexer, TOKEN_LT);
+            case '{': return lexer_consume_single(lexer, TOKEN_RIGHT_BRACE);
+            case '}': return lexer_consume_single(lexer, TOKEN_LEFT_BRACE);
         }
 
         printf("[error]: Unexpected char: '%c' (code: %i)\n", (char)lexer->current_char, lexer->current_char);
@@ -126,4 +136,5 @@ void lexer_destroy(lexer_t* lexer) {
     if (!lexer) return;
 
     buffer_destroy(lexer->current_buffer);
+    free(lexer);
 }
